@@ -6,7 +6,9 @@ from numpy.random import normal
 
 from PID import PID
 from decisionMaker import Maker
-from drawer import Drawer
+# from drawer import Drawer
+import matplotlib as mlp
+import matplotlib.pyplot as plt
 
 
 def simulate(state, left, right, dt):
@@ -76,16 +78,18 @@ old_state = {
 if __name__ == '__main__':
 
     re = []
-    for _ in range(1):
+    data_x = []
+    data_y = []
+    for _ in range(10):
 
         pid = PID(kp=kp, ki=ki, kd=kd, minout=-2500, maxout=500, sampleTime=0.1)
         maker = Maker(points)
         state = old_state
         data = []
         cost = 0
-        for i in range(6000):
+        for i in range(8000):
 
-            ideal_angle = maker.getDecision(state)
+            ideal_angle = maker.LOGMaker(state,10)
             cost += maker.getCost(state)
             if ideal_angle==-1000:
                 break
@@ -94,10 +98,14 @@ if __name__ == '__main__':
             output = 0 if abs(output)<5 else output
             left, right = 1000 + output, 1000
             data.append([state['x'], state['y'], state['u'], state['v'], state['phi'], state['alpha'], left, right])
+            data_x.append(state['x'])
+            data_y.append(state['y'])
             state = simulate(state, left, right, 0.1)
         re.append(cost/i)
 
     print(np.mean(re))
     file_name = './data/' + time.strftime("%Y-%m-%d__%H:%M", time.localtime())
+    plt.plot(data_x, data_y)
+    plt.show()
     # drawer = Drawer()
     # drawer.drawFromData(data, file_name, cost)
